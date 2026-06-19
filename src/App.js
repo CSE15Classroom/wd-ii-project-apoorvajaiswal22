@@ -1,107 +1,313 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
+import productsData from "./data";
 
-function Navbar() {
+function Navbar({
+  cartCount,
+  wishlistCount,
+  search,
+  setSearch,
+}) {
   return (
     <nav className="navbar">
-      <h1>Nykaa Beauty</h1>
-      <ul>
-        <li>Home</li>
-        <li>Makeup</li>
-        <li>Skincare</li>
-        <li>Haircare</li>
-      </ul>
+      <h1 className="logo">NYKAA</h1>
+
+      <input
+        type="text"
+        placeholder="Search for products, brands and more..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      <div className="nav-right">
+        <span>❤️ {wishlistCount}</span>
+        <span>🛒 {cartCount}</span>
+      </div>
     </nav>
   );
 }
 
-function ProductCard({ product }) {
+function Hero() {
+  return (
+    <section className="hero">
+      <div className="hero-content">
+        <h1>FLAT 50% OFF</h1>
+        <p>On Beauty, Makeup & Skincare Products</p>
+        <button>SHOP NOW</button>
+      </div>
+    </section>
+  );
+}
+
+function ProductCard({
+  product,
+  addToCart,
+  toggleWishlist,
+  wishlist,
+}) {
+  const isWishlisted = wishlist.includes(product.id);
+
   return (
     <div className="card">
-      <img src={product.image} alt={product.title} />
-      <h3>{product.title.slice(0, 30)}...</h3>
-      <p>₹ {Math.round(product.price * 80)}</p>
-      <button>Add to Cart</button>
+      <div
+        className="wishlist-btn"
+        onClick={() => toggleWishlist(product.id)}
+      >
+        {isWishlisted ? "❤️" : "🤍"}
+      </div>
+
+      <img
+        src={product.image}
+        alt={product.title}
+      />
+
+      <h3>{product.title}</h3>
+
+      <p className="category">
+        {product.category}
+      </p>
+
+      <div className="rating">
+        ⭐ {product.rating}
+      </div>
+
+      <p className="price">
+        ₹ {product.price}
+      </p>
+
+      <button
+        onClick={() => addToCart(product)}
+      >
+        Add To Bag
+      </button>
     </div>
   );
 }
 
 function Newsletter() {
   const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
+  const [message, setMessage] =
+    useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!email.includes("@")) {
-      setError("Enter a valid email");
+      setMessage(
+        "Please enter a valid email"
+      );
       return;
     }
 
-    setError("");
-    alert("Subscribed Successfully!");
+    setMessage(
+      "Subscribed Successfully 🎉"
+    );
     setEmail("");
   };
 
   return (
-    <div className="newsletter">
-      <h2>Get Beauty Updates</h2>
+    <section className="newsletter">
+      <h2>
+        Get Beauty Tips & Exclusive Offers
+      </h2>
 
       <form onSubmit={handleSubmit}>
         <input
-          type="text"
+          type="email"
           placeholder="Enter Email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) =>
+            setEmail(e.target.value)
+          }
         />
 
-        <button type="submit">Subscribe</button>
+        <button type="submit">
+          Subscribe
+        </button>
       </form>
 
-      <p className="error">{error}</p>
-    </div>
+      <p>{message}</p>
+    </section>
   );
 }
 
 export default function App() {
-  const [products, setProducts] = useState([]);
-  const [search, setSearch] = useState("");
+  const [products, setProducts] =
+    useState([]);
+
+  const [cart, setCart] = useState([]);
+
+  const [wishlist, setWishlist] =
+    useState([]);
+
+  const [search, setSearch] =
+    useState("");
+
+  const [category, setCategory] =
+    useState("All");
 
   useEffect(() => {
-    fetch("https://fakestoreapi.com/products")
-      .then((res) => res.json())
-      .then((data) => setProducts(data));
+    setProducts(productsData);
   }, []);
 
-  const filteredProducts = products.filter((item) =>
-    item.title.toLowerCase().includes(search.toLowerCase())
+  const addToCart = (product) => {
+    setCart([...cart, product]);
+  };
+
+  const toggleWishlist = (id) => {
+    if (wishlist.includes(id)) {
+      setWishlist(
+        wishlist.filter(
+          (item) => item !== id
+        )
+      );
+    } else {
+      setWishlist([...wishlist, id]);
+    }
+  };
+
+  const filteredProducts =
+    products.filter((product) => {
+      const matchesSearch =
+        product.title
+          .toLowerCase()
+          .includes(
+            search.toLowerCase()
+          );
+
+      const matchesCategory =
+        category === "All"
+          ? true
+          : product.category ===
+            category;
+
+      return (
+        matchesSearch &&
+        matchesCategory
+      );
+    });
+
+  const totalPrice = cart.reduce(
+    (sum, item) => sum + item.price,
+    0
   );
 
   return (
-    <div>
-      <Navbar />
+    <>
+      <Navbar
+        cartCount={cart.length}
+        wishlistCount={
+          wishlist.length
+        }
+        search={search}
+        setSearch={setSearch}
+      />
 
-      <header className="hero">
-        <h1>Welcome To Nykaa</h1>
-        <p>Beauty Begins Here</p>
-      </header>
+      <Hero />
 
-      <div className="search-box">
-        <input
-          type="text"
-          placeholder="Search Products..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+      <section className="categories">
+        <button
+          onClick={() =>
+            setCategory("All")
+          }
+        >
+          All
+        </button>
+
+        <button
+          onClick={() =>
+            setCategory("Makeup")
+          }
+        >
+          Makeup
+        </button>
+
+        <button
+          onClick={() =>
+            setCategory("Skincare")
+          }
+        >
+          Skincare
+        </button>
+
+        <button
+          onClick={() =>
+            setCategory("Haircare")
+          }
+        >
+          Haircare
+        </button>
+
+        <button
+          onClick={() =>
+            setCategory("Fragrance")
+          }
+        >
+          Fragrance
+        </button>
+      </section>
+
+      <h2 className="product-count">
+        Showing {
+          filteredProducts.length
+        } Products
+      </h2>
 
       <section className="products">
-        {filteredProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
+        {filteredProducts.map(
+          (product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              addToCart={addToCart}
+              toggleWishlist={
+                toggleWishlist
+              }
+              wishlist={wishlist}
+            />
+          )
+        )}
+      </section>
+
+      <section className="cart-section">
+        <h2>
+          🛒 Cart ({cart.length})
+        </h2>
+
+        {cart.length === 0 ? (
+          <p>No products added.</p>
+        ) : (
+          <>
+            {cart.map(
+              (item, index) => (
+                <div
+                  key={index}
+                  className="cart-item"
+                >
+                  {item.title}
+                  <span>
+                    ₹ {item.price}
+                  </span>
+                </div>
+              )
+            )}
+
+            <h3>
+              Total: ₹ {totalPrice}
+            </h3>
+          </>
+        )}
       </section>
 
       <Newsletter />
-    </div>
+
+      <footer>
+        <h3>Nykaa Clone</h3>
+        <p>
+          Beauty • Makeup •
+          Skincare • Haircare
+        </p>
+      </footer>
+    </>
   );
 }
